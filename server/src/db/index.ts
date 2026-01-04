@@ -1,13 +1,20 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
 
-const dbPath = process.env.DATABASE_FILE_PATH || path.resolve(__dirname, '../../game.db');
+const isProduction = process.env.NODE_ENV === 'production';
+// In Railway/Production, use /tmp or /app to ensure write access if ephemeral, or allow via env var
+const defaultPath = isProduction ? '/tmp/game.db' : path.resolve(__dirname, '../../game.db');
+const dbPath = process.env.DATABASE_FILE_PATH || defaultPath;
+
+console.log(`[DB] Attempting to connect to SQLite at: ${dbPath}`);
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
-        console.error('Could not connect to SQLite database:', err.message);
+        console.error('[DB] FATAL: Could not connect to SQLite database:', err.message);
+        // We might want to exit if DB fails
+        process.exit(1);
     } else {
-        console.log('Connected to SQLite database at', dbPath);
+        console.log('[DB] Connected to SQLite database successfully.');
     }
 });
 
